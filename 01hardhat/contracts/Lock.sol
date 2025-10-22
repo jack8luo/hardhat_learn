@@ -7,6 +7,7 @@ pragma solidity ^0.8.28;
 contract Lock {
   uint public unlockTime;
   address payable public owner;
+    uint public luohao;
 
   event Withdrawal(uint amount, uint when);
 
