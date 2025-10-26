@@ -44,3 +44,19 @@ npx hardhat ignition deploy ./ignition/modules/Lock.js --network localhost
 | ✅ Etherscan 支持当前链                               | 比如 sepolia、goerli 都支持             |
 | ✅ 模块中合约部署成功且是“独立部署”（非代理）                        | 对于 proxy 或 UUPS 模式不会自动验证          |
 | ✅ 合约的 artifact、构造参数、编译设置未变化                     | 若二次部署逻辑不同（或字节码不同），Ignition 不会重复验证 |
+
+## task
+hardhat本身就是一个任务执行系统，那怎么定义任务呢？如何执行任务呢？ -- task
+```js
+// tasks/accounts.js
+const { task } = require("hardhat/config");
+
+task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
+  const accounts = await hre.ethers.getSigners();
+  for (const account of accounts) {
+    console.log(account.address);
+  }
+});
+```
+运行：
+npx hardhat accounts
