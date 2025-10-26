@@ -39,5 +39,6 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     });
 
 
-    module.exports.tags = ["deployNftAuction"]
 }
+
+module.exports.tags = ["deployNftAuction"]
