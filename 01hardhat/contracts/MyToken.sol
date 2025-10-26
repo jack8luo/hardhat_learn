@@ -11,7 +11,7 @@ contract MyToken is ERC20 {
         msg.data	调用时携带的完整 calldata 数据
         msg.sig	调用函数选择器（前 4 字节）
      */
-    constructor(uint256 initialSupply) ERC20("MyToken", "MKT") {
+    constructor(uint256 initialSupply) ERC20("MyToken", "MTK") {
         // sodility的铸币函数
         // 给 msg.sender（部署合约的人）增加 1000 个代币；
         _mint(msg.sender, initialSupply);
