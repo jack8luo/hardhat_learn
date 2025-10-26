@@ -60,3 +60,6 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 ```
 运行：
 npx hardhat accounts
+
+## 测试
+npx hardhat test test/MyToken.js
