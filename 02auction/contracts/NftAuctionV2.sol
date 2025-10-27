@@ -2,8 +2,9 @@
 pragma solidity ^0.8;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract NftAuctionV2 is Initializable {
+contract NftAuctionV2 is Initializable, UUPSUpgradeable{
 
     // 结构体
     struct Auction {
@@ -67,5 +68,10 @@ contract NftAuctionV2 is Initializable {
 
     function testHello() public pure returns (string memory){
         return "hello, world";
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override view {
+        // 只有管理员可以升级合约
+        require(msg.sender == admin, unicode"只有管理员可以升级合约");
     }
 }
