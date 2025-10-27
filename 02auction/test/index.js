@@ -1,4 +1,5 @@
 const { ethers, deployments, upgrades } = require("hardhat"); // todo hardhat啥都有？
+// hardhat 是 hardhat run environment，有所有的模块
 const { expect } = require("chai");
 
 describe("Test upgrade", async function () {

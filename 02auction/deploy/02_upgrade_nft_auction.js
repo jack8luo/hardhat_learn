@@ -29,5 +29,8 @@ module.exports = async function({getNamedAccounts, deployments}){
 
 }
 
-// todo
+//deployments.fixture() 是 Hardhat-deploy 插件 提供的一个辅助函数，用来：
+//
+// 快速、自动地 重置并重新部署 特定标签（tags）对应的合约，
+// 从而在测试或脚本中获得一个干净的部署状态。
 module.exports.tags = ["upgradeNftAuction"]
