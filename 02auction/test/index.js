@@ -1,4 +1,4 @@
-const { ethers, deployments, upgrades } = require("hardhat"); // todo hardhat啥都有？
+const { ethers, deployments, upgrades } = require("hardhat");
 // hardhat 是 hardhat run environment，有所有的模块
 const { expect } = require("chai");
 
@@ -7,7 +7,7 @@ describe("Test upgrade", async function () {
         const [signer, buyer] = await ethers.getSigners()
 
         // 1. 部署业务合约
-        await deployments.fixture(["deployNftAuction"]); //todo
+        await deployments.fixture(["deployNftAuction"]);
 
         const nftAuctionProxy = await deployments.get("NftAuctionProxy");
         console.log(nftAuctionProxy)

@@ -2,8 +2,11 @@
 pragma solidity ^0.8;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-contract NftAuction is Initializable {
+contract NftAuction is Initializable, UUPSUpgradeable{
 
     // 结构体
     struct Auction {
@@ -14,7 +17,7 @@ contract NftAuction is Initializable {
         uint256 maxPrice;    // 最高价格
         address maxBidder;   // 最高出价人
         bool ended;          // 拍卖是否结束
-        address nftAddress; //合约地址
+        address nftContract; //合约地址
         uint256 tokenId; //NFTID
     }
 
@@ -36,6 +39,9 @@ contract NftAuction is Initializable {
         require(_duration > 0, unicode"持续时间必须大于0");
         require(_minPrice > 0, unicode"最小金额必须大于0");
 
+        // 转移NFT到合约
+        IERC721(_nftAddress).approve(address(this), _tokenId);
+
         auctions[nextAuctionId] = Auction({
             seller: msg.sender,
             duration: _duration,
@@ -44,7 +50,7 @@ contract NftAuction is Initializable {
             maxPrice: 0,
             maxBidder: address(0),
             startTime: block.timestamp,
-            nftAddress: _nftAddress,
+            nftContract: _nftAddress,
             tokenId: _tokenId
         });
         nextAuctionId++;
@@ -63,5 +69,23 @@ contract NftAuction is Initializable {
         }
         auction.maxPrice= msg.value;
         auction.maxBidder= msg.sender;
+    }
+
+// 结束拍卖
+    function endAuction(uint256 _auctionID) external {
+        // storage 链上数据修改
+        Auction storage auction = auctions[_auctionID];
+        // 判断当前拍卖是否结束
+        require(!auction.ended && (auction.startTime + auction.duration) <= block.timestamp, "Auction has not ended");
+        // 转移NFT到最高出价者
+        IERC721(auction.nftContract).safeTransferFrom(admin, auction.maxBidder, auction.tokenId);
+        // 转移剩余的资金到卖家
+        // payable(address(this)).transfer(address(this).balance);
+        auction.ended = true;
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override view {
+        // 只有管理员可以升级合约
+        require(msg.sender == admin, unicode"只有管理员可以升级合约");
     }
 }
