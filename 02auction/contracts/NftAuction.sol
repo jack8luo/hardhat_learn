@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 contract NftAuction is Initializable, UUPSUpgradeable{
 
@@ -19,6 +20,7 @@ contract NftAuction is Initializable, UUPSUpgradeable{
         bool ended;          // 拍卖是否结束
         address nftContract; //合约地址
         uint256 tokenId; //NFTID
+        address tokenAddress; // 参与竞价的资产类型 0x代表eth ，其他表示erc20
     }
 
     //状态变量
@@ -28,10 +30,43 @@ contract NftAuction is Initializable, UUPSUpgradeable{
     // 管理员地址
     address public admin;
 
+    AggregatorV3Interface internal dataFeed;
+
+    function setPriceETHFeed(address _priceETHFeed) public  {
+        dataFeed = AggregatorV3Interface(_priceETHFeed);
+    }
+
+    /**
+    * Returns the latest answer.
+    * eth->usd 385521271400
+    * usdc->usd 99984833
+    */
+    function getChainlinkDataFeedLatestAnswer() public view returns (int256) {
+        // prettier-ignore
+        (
+        /* uint80 roundId */
+        ,
+        int256 answer,
+        /*uint256 startedAt*/
+        ,
+        /*uint256 updatedAt*/
+        ,
+        /*uint80 answeredInRound*/
+        ) = dataFeed.latestRoundData();
+        return answer;
+    }
+
+    // q：为什么部署合约要先iniitialize
+    // 因为这是可升级（UUPS）合约。代理模式下构造函数不会执行，所以需要用 initialize() 在代理合约的存储里完成一次性的初始化（设置 admin、调用父类初始化等）。无论主网还是测试网，原理一样。
     function initialize() initializer public {
         admin = msg.sender;
     }
-    
+    /**
+     * 结论：现在这个合约只用链上原生币付款出价——也就是 msg.value 里的那种币。
+    部署在以太坊主网/测试网 → 用 ETH（wei 计价）。
+    部署在 BSC → 用 BNB。
+    （总之就是该链的原生币
+     */
     // 创建拍卖
     function createAuction(uint256 _duration, uint256 _minPrice, address _nftAddress, uint256 _tokenId) public {
         // 只有管理员可以创建拍卖
@@ -51,13 +86,17 @@ contract NftAuction is Initializable, UUPSUpgradeable{
             maxBidder: address(0),
             startTime: block.timestamp,
             nftContract: _nftAddress,
-            tokenId: _tokenId
+            tokenId: _tokenId,
+            tokenAddress: address(0)
         });
         nextAuctionId++;
     }
 
     // 买家参与买单
-    function placeBid(uint256 _auctionId) external payable {
+    // 参数： NFT 、 开始价格 、
+    function placeBid(uint256 _auctionId, uint256 _startPrice, address _tokenAddress) external payable {
+        //  统一的价值尺度
+
         Auction storage auction = auctions[_auctionId];
         // 判断拍卖是否结束
         require(!auction.ended && auction.duration + auction.startTime > block.timestamp, unicode"拍卖已结束");
